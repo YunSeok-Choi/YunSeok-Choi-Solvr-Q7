@@ -58,10 +58,13 @@ export interface GithubReleaseResponse {
   readonly draft: boolean
   readonly prerelease: boolean
   readonly html_url: string
+  readonly tarball_url: string
+  readonly zipball_url: string
   readonly author: {
     readonly login: string
     readonly id: number
     readonly avatar_url: string
+    readonly html_url: string
   }
   readonly assets: Array<{
     readonly id: number
@@ -220,5 +223,11 @@ export interface DashboardResponse {
       earliest_release: string // 가장 오래된 릴리즈
       latest_release: string // 가장 최근 릴리즈
     }
+  }
+  pagination_info?: {
+    total_records: number
+    page: number
+    limit: number
+    total_pages: number
   }
 }

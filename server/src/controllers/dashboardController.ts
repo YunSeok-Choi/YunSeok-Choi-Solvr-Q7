@@ -72,8 +72,20 @@ export class DashboardController {
       // 대시보드 데이터 조회
       const dashboardData = await this.rawDataService.getDashboardData(filters)
 
+      console.log('📊 Dashboard data structure:', {
+        summary_metrics_count: dashboardData?.summary_metrics?.length || 0,
+        raw_data_count: dashboardData?.raw_data?.length || 0,
+        time_series_count: dashboardData?.time_series?.length || 0,
+        aggregations_keys: dashboardData?.aggregations
+          ? Object.keys(dashboardData.aggregations)
+          : [],
+        filters_applied: dashboardData?.filters_applied || {},
+        has_data_freshness: !!dashboardData?.data_freshness,
+        has_pagination_info: !!dashboardData?.pagination_info
+      })
+
       console.log(
-        `✅ Dashboard data generated successfully - ${dashboardData.raw_data.length} records`
+        `✅ Dashboard data generated successfully - ${dashboardData?.raw_data?.length || 0} records`
       )
 
       return reply.status(200).send({
