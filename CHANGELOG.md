@@ -1,3 +1,21 @@
+#### 1.0.0 (2025-06-08)
+
+##### Bug Fixes
+
+*  대시보드 오류 수정 (f091f430)
+
+##### Other Changes
+
+*  서버-클라이언트 완전 분리 및 로컬 데이터 기반 대시보드 시스템 구축 (66b7dbfa)
+*  Mission Complete (3c03a047)
+*  Mission Complete (aed3938e)
+*  Mission Complete (1d53c757)
+*  실패하는 테스트 수정 및 모킹 시스템 완전 구축 (43033816)
+*  Mission Complete (9b82a999)
+*  주말 제외 통계 분석 시스템 도입 (5305bbf2)
+*  Mission Complete (1bc47c81)
+*  GitHub 릴리즈 통계 API 서비스 완성 및 통합 CSV 시스템 구축 (fecc87e9)
+
 # Changelog
 
 <a name="1.0.0"></a>
