@@ -41,23 +41,34 @@ export class ReleaseStatsService {
     const weeklyStats: Record<string, number> = {}
     const dailyStats: Record<string, number> = {}
     const repoStats: Record<string, number> = {}
+    const weekendStats: Record<string, number> = {}
 
     releases.forEach(release => {
       const publishedDate = new Date(release.publishedAt)
       const year = publishedDate.getFullYear().toString()
       const week = this.getISOWeek(publishedDate)
       const day = this.formatDateToDay(publishedDate)
+      const dayOfWeek = publishedDate.getDay() // 0=일요일, 6=토요일
 
-      // 연도별 통계
-      yearlyStats[year] = (yearlyStats[year] || 0) + 1
+      // 주말(토요일, 일요일) 여부 확인
+      const isWeekend = dayOfWeek === 0 || dayOfWeek === 6
 
-      // 주차별 통계 (ISO 주차)
-      weeklyStats[week] = (weeklyStats[week] || 0) + 1
+      if (isWeekend) {
+        // 주말 릴리즈는 별도 통계로 기록
+        weekendStats[day] = (weekendStats[day] || 0) + 1
+      } else {
+        // 평일 릴리즈만 주요 통계에 포함
+        // 연도별 통계 (평일만)
+        yearlyStats[year] = (yearlyStats[year] || 0) + 1
 
-      // 일간별 통계
-      dailyStats[day] = (dailyStats[day] || 0) + 1
+        // 주차별 통계 (평일만)
+        weeklyStats[week] = (weeklyStats[week] || 0) + 1
 
-      // 저장소별 통계
+        // 일간별 통계 (평일만)
+        dailyStats[day] = (dailyStats[day] || 0) + 1
+      }
+
+      // 저장소별 통계는 주말 포함 (전체 릴리즈 활동)
       repoStats[release.repo] = (repoStats[release.repo] || 0) + 1
     })
 
@@ -65,7 +76,8 @@ export class ReleaseStatsService {
       yearlyStats,
       weeklyStats,
       dailyStats,
-      repoStats
+      repoStats,
+      weekendStats
     }
   }
 
@@ -112,15 +124,27 @@ export class ReleaseStatsService {
    */
   private async generateUnifiedCSV(releases: ReleaseInfo[]): Promise<string> {
     try {
-      const { yearlyStats, weeklyStats, dailyStats, repoStats } =
+      const { yearlyStats, weeklyStats, dailyStats, repoStats, weekendStats } =
         this.calculateDetailedStats(releases)
+
+      // 평일 릴리즈와 주말 릴리즈 수 계산
+      const weekdayReleases = releases.filter(r => {
+        const dayOfWeek = new Date(r.publishedAt).getDay()
+        return dayOfWeek !== 0 && dayOfWeek !== 6
+      })
+      const weekendReleasesCount = releases.length - weekdayReleases.length
 
       // 통합 CSV 데이터 생성
       const csvSections: string[] = []
 
       // 1. 헤더 섹션
-      csvSections.push('=== RELEASE STATISTICS SUMMARY ===')
+      csvSections.push('=== RELEASE STATISTICS SUMMARY (WEEKDAYS ONLY) ===')
       csvSections.push(`Total Releases,${releases.length}`)
+      csvSections.push(`Weekday Releases,${weekdayReleases.length}`)
+      csvSections.push(`Weekend Releases,${weekendReleasesCount}`)
+      csvSections.push(
+        `Weekend Release Ratio,${((weekendReleasesCount / releases.length) * 100).toFixed(2)}%`
+      )
       csvSections.push(
         `Date Range,${this.formatDateToDay(new Date(Math.min(...releases.map(r => new Date(r.publishedAt).getTime()))))} to ${this.formatDateToDay(new Date(Math.max(...releases.map(r => new Date(r.publishedAt).getTime()))))}`
       )
@@ -169,31 +193,31 @@ export class ReleaseStatsService {
       })
       csvSections.push('')
 
-      // 3. 연간 통계 섹션
-      csvSections.push('=== YEARLY STATISTICS ===')
+      // 3. 연간 통계 섹션 (평일만)
+      csvSections.push('=== YEARLY STATISTICS (WEEKDAYS ONLY) ===')
       csvSections.push(
-        'year,total_releases,stackflow_releases,seed_design_releases,release_percentage'
+        'year,weekday_releases,stackflow_weekday,seed_design_weekday,weekday_percentage'
       )
 
       Object.entries(yearlyStats).forEach(([year, count]) => {
-        const stackflowCount = releases.filter(
+        const stackflowCount = weekdayReleases.filter(
           r => new Date(r.publishedAt).getFullYear().toString() === year && r.repo === 'stackflow'
         ).length
 
-        const seedDesignCount = releases.filter(
+        const seedDesignCount = weekdayReleases.filter(
           r => new Date(r.publishedAt).getFullYear().toString() === year && r.repo === 'seed-design'
         ).length
 
-        const percentage = ((count / releases.length) * 100).toFixed(2)
+        const percentage = ((count / weekdayReleases.length) * 100).toFixed(2)
         csvSections.push(`${year},${count},${stackflowCount},${seedDesignCount},${percentage}%`)
       })
       csvSections.push('')
 
-      // 4. 주간 통계 섹션 (상위 10개만)
-      csvSections.push('=== TOP WEEKLY STATISTICS ===')
-      csvSections.push('year,week,repo_name,release_count,week_total')
+      // 4. 주간 통계 섹션 (평일만, 상위 10개)
+      csvSections.push('=== TOP WEEKLY STATISTICS (WEEKDAYS ONLY) ===')
+      csvSections.push('year,week,repo_name,weekday_release_count,week_weekday_total')
 
-      const repoWeeklyStats = this.calculateRepoWeeklyStats(releases)
+      const repoWeeklyStats = this.calculateRepoWeeklyStats(weekdayReleases)
       const allWeeks: Array<{
         year: string
         week: string
@@ -224,10 +248,25 @@ export class ReleaseStatsService {
         })
       csvSections.push('')
 
-      // 5. 개별 릴리즈 상세 정보 섹션
+      // 5. 주말 릴리즈 통계 섹션
+      if (Object.keys(weekendStats).length > 0) {
+        csvSections.push('=== WEEKEND RELEASE STATISTICS ===')
+        csvSections.push('date,day_of_week,weekend_releases')
+
+        Object.entries(weekendStats)
+          .sort(([a], [b]) => a.localeCompare(b))
+          .forEach(([date, count]) => {
+            const dateObj = new Date(date + 'T00:00:00Z')
+            const dayOfWeek = dateObj.toLocaleDateString('ko-KR', { weekday: 'long' })
+            csvSections.push(`${date},${dayOfWeek},${count}`)
+          })
+        csvSections.push('')
+      }
+
+      // 6. 개별 릴리즈 상세 정보 섹션
       csvSections.push('=== DETAILED RELEASE INFORMATION ===')
       csvSections.push(
-        'repo_name,tag,published_date,published_year,published_month,published_week,published_day_of_week,days_since_last_release,repo_cumulative_count'
+        'repo_name,tag,published_date,published_year,published_month,published_week,published_day_of_week,is_weekend,days_since_last_release,repo_cumulative_count'
       )
 
       const sortedReleases = [...releases].sort(
@@ -244,6 +283,10 @@ export class ReleaseStatsService {
         const dayOfWeek = publishedDate.toLocaleDateString('ko-KR', { weekday: 'long' })
         const formattedDate = this.formatDateToDay(publishedDate)
 
+        // 주말 여부 확인
+        const dayOfWeekNum = publishedDate.getDay()
+        const isWeekend = dayOfWeekNum === 0 || dayOfWeekNum === 6
+
         // 저장소별 누적 카운트
         repoCumulativeCounts[release.repo] = (repoCumulativeCounts[release.repo] || 0) + 1
 
@@ -257,7 +300,7 @@ export class ReleaseStatsService {
         }
 
         csvSections.push(
-          `${release.repo},${release.tag},${formattedDate},${year},${month.toString().padStart(2, '0')},${week},${dayOfWeek},${daysSinceLastRelease},${repoCumulativeCounts[release.repo]}`
+          `${release.repo},${release.tag},${formattedDate},${year},${month.toString().padStart(2, '0')},${week},${dayOfWeek},${isWeekend ? 'YES' : 'NO'},${daysSinceLastRelease},${repoCumulativeCounts[release.repo]}`
         )
       })
 
