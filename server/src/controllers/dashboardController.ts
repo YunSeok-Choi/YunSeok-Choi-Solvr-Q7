@@ -1,14 +1,12 @@
 import { FastifyRequest, FastifyReply } from 'fastify'
 import { RawDataService } from '../services/rawDataService'
-import { GithubService } from '../services/githubService'
 import { DashboardFilterOptions } from '../types'
 
 export class DashboardController {
   private readonly rawDataService: RawDataService
 
   constructor() {
-    const githubService = new GithubService()
-    this.rawDataService = new RawDataService(githubService)
+    this.rawDataService = new RawDataService()
   }
 
   /**
@@ -340,6 +338,123 @@ export class DashboardController {
         success: false,
         error: error instanceof Error ? error.message : '알 수 없는 오류가 발생했습니다',
         message: '시계열 데이터 조회에 실패했습니다'
+      })
+    }
+  }
+
+  /**
+   * 저장소 목록 반환
+   * GET /api/dashboard/repositories
+   */
+  async getRepositories(request: FastifyRequest, reply: FastifyReply) {
+    try {
+      console.log('📁 Repositories request received')
+
+      const dataService = (this.rawDataService as any).dataService
+      const repositories = dataService.getRepositories()
+
+      console.log(`✅ Repositories retrieved successfully - ${repositories.length} repositories`)
+
+      return reply.status(200).send({
+        success: true,
+        data: repositories,
+        message: '저장소 목록을 성공적으로 조회했습니다'
+      })
+    } catch (error) {
+      console.error('❌ Repositories retrieval failed:', error)
+
+      return reply.status(500).send({
+        success: false,
+        error: error instanceof Error ? error.message : '알 수 없는 오류가 발생했습니다',
+        message: '저장소 목록 조회에 실패했습니다'
+      })
+    }
+  }
+
+  /**
+   * 서버 통계 정보 반환
+   * GET /api/dashboard/stats
+   */
+  async getServerStats(request: FastifyRequest, reply: FastifyReply) {
+    try {
+      console.log('📊 Server stats request received')
+
+      const dataService = (this.rawDataService as any).dataService
+      const stats = dataService.getStats()
+
+      console.log('✅ Server stats retrieved successfully')
+
+      return reply.status(200).send({
+        success: true,
+        data: stats,
+        message: '서버 통계를 성공적으로 조회했습니다'
+      })
+    } catch (error) {
+      console.error('❌ Server stats retrieval failed:', error)
+
+      return reply.status(500).send({
+        success: false,
+        error: error instanceof Error ? error.message : '알 수 없는 오류가 발생했습니다',
+        message: '서버 통계 조회에 실패했습니다'
+      })
+    }
+  }
+
+  /**
+   * 디버깅용 데이터 상태 확인
+   * GET /api/dashboard/debug
+   */
+  async getDebugInfo(request: FastifyRequest, reply: FastifyReply) {
+    console.log('🐛 Debug info request received - START')
+
+    try {
+      const debugInfo: any = {
+        timestamp: new Date().toISOString(),
+        status: 'starting'
+      }
+
+      // 기본 정보 추가
+      debugInfo.rawDataServiceExists = !!this.rawDataService
+      debugInfo.rawDataServiceType = typeof this.rawDataService
+
+      // DataService 접근 시도
+      try {
+        const { DataService } = await import('../services/dataService.js')
+        const dataService = DataService.getInstance()
+
+        debugInfo.dataServiceExists = !!dataService
+        debugInfo.isDataLoaded = dataService.isDataLoaded()
+        debugInfo.dataPath = dataService.dataPath || 'not available'
+
+        if (dataService.isDataLoaded()) {
+          debugInfo.allReleases = dataService.getAllReleases().length
+          debugInfo.repositories = dataService.getRepositories()
+        } else {
+          debugInfo.allReleases = 0
+          debugInfo.repositories = []
+        }
+
+        debugInfo.status = 'success'
+      } catch (serviceError: any) {
+        console.error('❌ Error with DataService:', serviceError)
+        debugInfo.serviceError = serviceError?.message || 'Unknown service error'
+        debugInfo.status = 'service_error'
+      }
+
+      console.log('🐛 Debug info prepared:', debugInfo)
+
+      return reply.status(200).send({
+        success: true,
+        data: debugInfo,
+        message: '디버그 정보를 성공적으로 조회했습니다'
+      })
+    } catch (error: any) {
+      console.error('❌ Debug info retrieval failed:', error)
+
+      return reply.status(500).send({
+        success: false,
+        error: error?.message || '알 수 없는 오류가 발생했습니다',
+        message: '디버그 정보 조회에 실패했습니다'
       })
     }
   }

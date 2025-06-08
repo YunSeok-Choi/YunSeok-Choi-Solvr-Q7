@@ -1,4 +1,4 @@
-import { GithubService } from './githubService'
+import { DataService } from './dataService'
 import {
   RawReleaseData,
   DashboardResponse,
@@ -10,7 +10,11 @@ import {
 } from '../types'
 
 export class RawDataService {
-  constructor(private readonly githubService: GithubService) {}
+  private dataService: DataService
+
+  constructor() {
+    this.dataService = DataService.getInstance()
+  }
 
   /**
    * 버전 문자열을 파싱하여 major, minor, patch 버전을 추출합니다
@@ -549,9 +553,28 @@ export class RawDataService {
     try {
       console.log('🚀 Starting dashboard data generation...')
 
-      // GitHub에서 확장된 원본 데이터 가져오기 대신 목업 데이터 사용
-      const enhancedReleases = this.getMockData()
-      console.log(`📦 Mock data generated: ${enhancedReleases.length} releases`)
+      // 로컬 데이터 서비스에서 실제 릴리즈 데이터 가져오기
+      console.log('🔍 Checking data service state:', {
+        isDataLoaded: this.dataService.isDataLoaded(),
+        dataPath: this.dataService.dataPath
+      })
+
+      if (!this.dataService.isDataLoaded()) {
+        console.error('❌ Data not loaded! Attempting to load now...')
+        try {
+          await this.dataService.loadData()
+        } catch (loadError) {
+          console.error('❌ Failed to load data:', loadError)
+          throw new Error('Data not loaded. Server may not be properly initialized.')
+        }
+      }
+
+      const enhancedReleases = this.dataService.getAllReleases()
+      console.log(`📦 Local data loaded: ${enhancedReleases.length} releases`)
+
+      if (enhancedReleases.length === 0) {
+        console.warn('⚠️ No releases found in loaded data')
+      }
 
       // Raw 데이터로 변환
       let rawData: RawReleaseData[] = []
@@ -680,73 +703,5 @@ export class RawDataService {
         }
       }
     }
-  }
-
-  /**
-   * 목업 데이터를 생성합니다 (테스트 및 개발용)
-   */
-  private getMockData(): Array<GithubReleaseResponse & { repo: string }> {
-    const now = new Date()
-    const mockReleases: Array<GithubReleaseResponse & { repo: string }> = []
-
-    // stackflow 저장소 목업 데이터
-    for (let i = 0; i < 15; i++) {
-      const daysAgo = i * 7 + Math.floor(Math.random() * 7)
-      const releaseDate = new Date(now.getTime() - daysAgo * 24 * 60 * 60 * 1000)
-
-      mockReleases.push({
-        id: 1000000 + i,
-        tag_name: `v1.${15 - i}.${Math.floor(Math.random() * 10)}`,
-        name: `Release v1.${15 - i}.${Math.floor(Math.random() * 10)}`,
-        body: `Release notes for version 1.${15 - i}`,
-        published_at: releaseDate.toISOString(),
-        created_at: releaseDate.toISOString(),
-        draft: false,
-        prerelease: Math.random() > 0.8,
-        html_url: `https://github.com/daangn/stackflow/releases/tag/v1.${15 - i}.${Math.floor(Math.random() * 10)}`,
-        tarball_url: '',
-        zipball_url: '',
-        author: {
-          login: 'developer',
-          id: 12345,
-          avatar_url: '',
-          html_url: 'https://github.com/developer'
-        },
-        assets: [],
-        repo: 'stackflow'
-      })
-    }
-
-    // seed-design 저장소 목업 데이터
-    for (let i = 0; i < 20; i++) {
-      const daysAgo = i * 5 + Math.floor(Math.random() * 5)
-      const releaseDate = new Date(now.getTime() - daysAgo * 24 * 60 * 60 * 1000)
-
-      mockReleases.push({
-        id: 2000000 + i,
-        tag_name: `v2.${20 - i}.${Math.floor(Math.random() * 10)}`,
-        name: `Design System v2.${20 - i}.${Math.floor(Math.random() * 10)}`,
-        body: `Design system release notes for version 2.${20 - i}`,
-        published_at: releaseDate.toISOString(),
-        created_at: releaseDate.toISOString(),
-        draft: false,
-        prerelease: Math.random() > 0.9,
-        html_url: `https://github.com/daangn/seed-design/releases/tag/v2.${20 - i}.${Math.floor(Math.random() * 10)}`,
-        tarball_url: '',
-        zipball_url: '',
-        author: {
-          login: 'designer',
-          id: 67890,
-          avatar_url: '',
-          html_url: 'https://github.com/designer'
-        },
-        assets: [],
-        repo: 'seed-design'
-      })
-    }
-
-    return mockReleases.sort(
-      (a, b) => new Date(b.published_at).getTime() - new Date(a.published_at).getTime()
-    )
   }
 }

@@ -29,11 +29,56 @@ const Dashboard: React.FC = () => {
     setError(null)
 
     try {
+      console.log('🔄 Loading dashboard data with filters:', newFilters || filters)
       const data = await DashboardService.getDashboardData(newFilters || filters)
+
+      // 데이터 유효성 검증
+      if (!data) {
+        throw new Error('서버에서 빈 데이터를 반환했습니다')
+      }
+
+      console.log('✅ Dashboard data loaded:', {
+        metrics: data.summary_metrics?.length || 0,
+        rawData: data.raw_data?.length || 0,
+        timeSeries: data.time_series?.length || 0
+      })
+
       setDashboardData(data)
       setLastUpdated(new Date())
     } catch (err) {
-      setError(err instanceof Error ? err.message : '데이터를 불러오는데 실패했습니다')
+      console.error('❌ Dashboard data loading failed:', err)
+      const errorMessage = err instanceof Error ? err.message : '데이터를 불러오는데 실패했습니다'
+      setError(`서버 연결 오류: ${errorMessage}`)
+
+      // 오류 발생 시 기본 빈 데이터 구조 설정
+      setDashboardData({
+        summary_metrics: [],
+        raw_data: [],
+        time_series: [],
+        aggregations: {
+          by_repo: [],
+          by_date: [],
+          by_day_of_week: [],
+          by_month: [],
+          by_quarter: [],
+          by_time_period: [],
+          by_release_type: []
+        },
+        filters_applied: {},
+        data_freshness: {
+          last_updated: new Date().toISOString(),
+          data_range: {
+            earliest_release: '',
+            latest_release: ''
+          }
+        },
+        pagination_info: {
+          total_records: 0,
+          page: 1,
+          limit: 50,
+          total_pages: 0
+        }
+      })
     } finally {
       setIsLoading(false)
     }
@@ -163,13 +208,13 @@ const Dashboard: React.FC = () => {
         )}
 
         {/* 대시보드 내용 */}
-        {dashboardData && (
+        {dashboardData && !isLoading && (
           <>
             {/* 주요 메트릭 */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-              {dashboardData.summary_metrics?.map((metric, index) => (
-                <MetricCard key={index} metric={metric} />
-              )) || []}
+              {(dashboardData.summary_metrics || []).map((metric, index) => (
+                <MetricCard key={`metric-${index}`} metric={metric} />
+              ))}
             </div>
 
             {/* 차트 그리드 */}
@@ -177,7 +222,7 @@ const Dashboard: React.FC = () => {
               {/* 시계열 차트 */}
               <div className="lg:col-span-2">
                 <TimeSeriesChart
-                  data={dashboardData.time_series || []}
+                  data={dashboardData?.time_series || []}
                   title="릴리즈 추이"
                   showCumulative={true}
                   showArea={false}
@@ -186,7 +231,7 @@ const Dashboard: React.FC = () => {
 
               {/* 저장소별 분포 */}
               <PieChart
-                data={dashboardData.aggregations?.by_repo || []}
+                data={dashboardData?.aggregations?.by_repo || []}
                 title="저장소별 릴리즈 분포"
                 innerRadius={40}
                 showLegend={false}
@@ -194,7 +239,7 @@ const Dashboard: React.FC = () => {
 
               {/* 릴리즈 타입별 분포 */}
               <PieChart
-                data={dashboardData.aggregations?.by_release_type || []}
+                data={dashboardData?.aggregations?.by_release_type || []}
                 title="릴리즈 타입별 분포"
                 innerRadius={0}
                 colors={['#3B82F6', '#10B981', '#F59E0B', '#EF4444']}
@@ -202,7 +247,7 @@ const Dashboard: React.FC = () => {
 
               {/* 요일별 분포 */}
               <BarChart
-                data={dashboardData.aggregations?.by_day_of_week || []}
+                data={dashboardData?.aggregations?.by_day_of_week || []}
                 title="요일별 릴리즈 분포"
                 color="#10B981"
                 showPercentage={true}
@@ -210,7 +255,7 @@ const Dashboard: React.FC = () => {
 
               {/* 시간대별 분포 */}
               <BarChart
-                data={dashboardData.aggregations?.by_time_period || []}
+                data={dashboardData?.aggregations?.by_time_period || []}
                 title="시간대별 릴리즈 분포"
                 color="#8B5CF6"
                 showPercentage={true}
@@ -218,7 +263,7 @@ const Dashboard: React.FC = () => {
 
               {/* 월별 분포 */}
               <BarChart
-                data={dashboardData.aggregations?.by_month || []}
+                data={dashboardData?.aggregations?.by_month || []}
                 title="월별 릴리즈 분포"
                 color="#F59E0B"
                 horizontal={false}
@@ -226,7 +271,7 @@ const Dashboard: React.FC = () => {
 
               {/* 분기별 분포 */}
               <BarChart
-                data={dashboardData.aggregations?.by_quarter || []}
+                data={dashboardData?.aggregations?.by_quarter || []}
                 title="분기별 릴리즈 분포"
                 color="#EC4899"
                 horizontal={false}

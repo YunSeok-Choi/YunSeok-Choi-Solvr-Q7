@@ -1,0 +1,142 @@
+{
+  "repositories": [
+    {
+      "owner": "daangn",
+      "name": "stackflow",
+      "releases": [
+        {
+          "id": 116345234,
+          "tag_name": "v1.8.2",
+          "name": "Release v1.8.2",
+          "body": "## 🐛 Bug Fixes\n- Fixed navigation issue in React Native\n- Improved TypeScript definitions\n\n## 📦 Dependencies\n- Updated @stackflow/react to v1.8.2",
+          "published_at": "2024-04-15T14:30:00Z",
+          "created_at": "2024-04-15T14:25:00Z",
+          "draft": false,
+          "prerelease": false,
+          "html_url": "https://github.com/daangn/stackflow/releases/tag/v1.8.2",
+          "tarball_url": "https://github.com/daangn/stackflow/archive/refs/tags/v1.8.2.tar.gz",
+          "zipball_url": "https://github.com/daangn/stackflow/archive/refs/tags/v1.8.2.zip",
+          "author": {
+            "login": "devxoul",
+            "id": 931655,
+            "avatar_url": "https://avatars.githubusercontent.com/u/931655?v=4",
+            "html_url": "https://github.com/devxoul"
+          },
+          "assets": []
+        },
+        {
+          "id": 116123456,
+          "tag_name": "v1.8.1",
+          "name": "Release v1.8.1",
+          "body": "## 🚀 Features\n- Added new activity stack management\n- Enhanced push/pop animations\n\n## 🔧 Improvements\n- Better error handling in development mode",
+          "published_at": "2024-04-10T09:15:00Z",
+          "created_at": "2024-04-10T09:10:00Z",
+          "draft": false,
+          "prerelease": false,
+          "html_url": "https://github.com/daangn/stackflow/releases/tag/v1.8.1",
+          "tarball_url": "https://github.com/daangn/stackflow/archive/refs/tags/v1.8.1.tar.gz",
+          "zipball_url": "https://github.com/daangn/stackflow/archive/refs/tags/v1.8.1.zip",
+          "author": {
+            "login": "devxoul",
+            "id": 931655,
+            "avatar_url": "https://avatars.githubusercontent.com/u/931655?v=4",
+            "html_url": "https://github.com/devxoul"
+          },
+          "assets": []
+        },
+        {
+          "id": 115987654,
+          "tag_name": "v1.8.0",
+          "name": "Release v1.8.0",
+          "body": "## 🎉 Major Update\n- Complete rewrite of core navigation engine\n- New plugin system\n- Breaking changes in API\n\n## 📚 Documentation\n- Updated migration guide\n- New examples added",
+          "published_at": "2024-04-05T16:45:00Z",
+          "created_at": "2024-04-05T16:40:00Z",
+          "draft": false,
+          "prerelease": false,
+          "html_url": "https://github.com/daangn/stackflow/releases/tag/v1.8.0",
+          "tarball_url": "https://github.com/daangn/stackflow/archive/refs/tags/v1.8.0.tar.gz",
+          "zipball_url": "https://github.com/daangn/stackflow/archive/refs/tags/v1.8.0.zip",
+          "author": {
+            "login": "devxoul",
+            "id": 931655,
+            "avatar_url": "https://avatars.githubusercontent.com/u/931655?v=4",
+            "html_url": "https://github.com/devxoul"
+          },
+          "assets": []
+        }
+      ]
+    },
+    {
+      "owner": "daangn",
+      "name": "seed-design",
+      "releases": [
+        {
+          "id": 117456789,
+          "tag_name": "v1.12.5",
+          "name": "Design System v1.12.5",
+          "body": "## 🎨 Design Updates\n- New color tokens for accessibility\n- Updated button component variants\n\n## 🔧 Components\n- Fixed TextField focus state\n- Improved Modal backdrop behavior",
+          "published_at": "2024-04-18T11:20:00Z",
+          "created_at": "2024-04-18T11:15:00Z",
+          "draft": false,
+          "prerelease": false,
+          "html_url": "https://github.com/daangn/seed-design/releases/tag/v1.12.5",
+          "tarball_url": "https://github.com/daangn/seed-design/archive/refs/tags/v1.12.5.tar.gz",
+          "zipball_url": "https://github.com/daangn/seed-design/archive/refs/tags/v1.12.5.zip",
+          "author": {
+            "login": "sungik-choi",
+            "id": 55953729,
+            "avatar_url": "https://avatars.githubusercontent.com/u/55953729?v=4",
+            "html_url": "https://github.com/sungik-choi"
+          },
+          "assets": []
+        },
+        {
+          "id": 117234567,
+          "tag_name": "v1.12.4",
+          "name": "Design System v1.12.4",
+          "body": "## 🐛 Bug Fixes\n- Fixed icon sizing in Safari\n- Resolved z-index issues in Dropdown\n\n## 📱 Mobile\n- Improved touch targets for better usability",
+          "published_at": "2024-04-12T13:45:00Z",
+          "created_at": "2024-04-12T13:40:00Z",
+          "draft": false,
+          "prerelease": false,
+          "html_url": "https://github.com/daangn/seed-design/releases/tag/v1.12.4",
+          "tarball_url": "https://github.com/daangn/seed-design/archive/refs/tags/v1.12.4.tar.gz",
+          "zipball_url": "https://github.com/daangn/seed-design/archive/refs/tags/v1.12.4.zip",
+          "author": {
+            "login": "sungik-choi",
+            "id": 55953729,
+            "avatar_url": "https://avatars.githubusercontent.com/u/55953729?v=4",
+            "html_url": "https://github.com/sungik-choi"
+          },
+          "assets": []
+        },
+        {
+          "id": 117012345,
+          "tag_name": "v1.12.3",
+          "name": "Design System v1.12.3",
+          "body": "## ✨ New Features\n- Added dark mode support for all components\n- New Chart component family\n\n## 🔧 Improvements\n- Better TypeScript support\n- Reduced bundle size by 15%",
+          "published_at": "2024-04-08T10:30:00Z",
+          "created_at": "2024-04-08T10:25:00Z",
+          "draft": false,
+          "prerelease": false,
+          "html_url": "https://github.com/daangn/seed-design/releases/tag/v1.12.3",
+          "tarball_url": "https://github.com/daangn/seed-design/archive/refs/tags/v1.12.3.tar.gz",
+          "zipball_url": "https://github.com/daangn/seed-design/archive/refs/tags/v1.12.3.zip",
+          "author": {
+            "login": "sungik-choi",
+            "id": 55953729,
+            "avatar_url": "https://avatars.githubusercontent.com/u/55953729?v=4",
+            "html_url": "https://github.com/sungik-choi"
+          },
+          "assets": []
+        }
+      ]
+    }
+  ],
+  "metadata": {
+    "last_updated": "2024-04-20T12:00:00Z",
+    "data_version": "1.0.0",
+    "total_repositories": 2,
+    "total_releases": 6
+  }
+}

@@ -5,85 +5,7 @@ export async function dashboardRoutes(fastify: FastifyInstance) {
   const dashboardController = new DashboardController()
 
   // 전체 대시보드 데이터 조회
-  fastify.get(
-    '/dashboard',
-    {
-      schema: {
-        description: '전체 대시보드 데이터를 조회합니다',
-        tags: ['dashboard'],
-        querystring: {
-          type: 'object',
-          properties: {
-            repos: {
-              type: 'string',
-              description: '저장소 이름들 (콤마로 구분, 예: stackflow,seed-design)'
-            },
-            date_from: {
-              type: 'string',
-              format: 'date',
-              description: '시작 날짜 (YYYY-MM-DD)'
-            },
-            date_to: {
-              type: 'string',
-              format: 'date',
-              description: '종료 날짜 (YYYY-MM-DD)'
-            },
-            work_day_types: {
-              type: 'string',
-              description: '근무일 타입들 (콤마로 구분, 예: WEEKDAY,WEEKEND)'
-            },
-            release_types: {
-              type: 'string',
-              description: '릴리즈 타입들 (콤마로 구분, 예: major,minor,patch)'
-            },
-            time_periods: {
-              type: 'string',
-              description: '시간대들 (콤마로 구분, 예: MORNING,AFTERNOON)'
-            },
-            include_prereleases: {
-              type: 'boolean',
-              description: '사전 릴리즈 포함 여부'
-            },
-            include_drafts: {
-              type: 'boolean',
-              description: '드래프트 포함 여부'
-            },
-            min_days_between_releases: {
-              type: 'integer',
-              minimum: 0,
-              description: '최소 릴리즈 간격 (일)'
-            },
-            max_days_between_releases: {
-              type: 'integer',
-              minimum: 0,
-              description: '최대 릴리즈 간격 (일)'
-            }
-          }
-        },
-        response: {
-          200: {
-            description: '성공적인 응답',
-            type: 'object',
-            properties: {
-              success: { type: 'boolean' },
-              data: { type: 'object' },
-              message: { type: 'string' }
-            }
-          },
-          500: {
-            description: '서버 오류',
-            type: 'object',
-            properties: {
-              success: { type: 'boolean' },
-              error: { type: 'string' },
-              message: { type: 'string' }
-            }
-          }
-        }
-      }
-    },
-    dashboardController.getDashboardData.bind(dashboardController)
-  )
+  fastify.get('/dashboard', dashboardController.getDashboardData.bind(dashboardController))
 
   // Raw 데이터만 조회 (페이지네이션 지원)
   fastify.get(
@@ -259,4 +181,76 @@ export async function dashboardRoutes(fastify: FastifyInstance) {
     },
     dashboardController.getTimeSeries.bind(dashboardController)
   )
+
+  // 저장소 목록 조회
+  fastify.get(
+    '/dashboard/repositories',
+    {
+      schema: {
+        description: '저장소 목록을 조회합니다',
+        tags: ['dashboard'],
+        response: {
+          200: {
+            description: '성공적인 응답',
+            type: 'object',
+            properties: {
+              success: { type: 'boolean' },
+              data: {
+                type: 'array',
+                items: {
+                  type: 'object',
+                  properties: {
+                    owner: { type: 'string' },
+                    name: { type: 'string' },
+                    releaseCount: { type: 'number' }
+                  }
+                }
+              },
+              message: { type: 'string' }
+            }
+          }
+        }
+      }
+    },
+    dashboardController.getRepositories.bind(dashboardController)
+  )
+
+  // 서버 통계 조회
+  fastify.get(
+    '/dashboard/stats',
+    {
+      schema: {
+        description: '서버 통계 정보를 조회합니다',
+        tags: ['dashboard'],
+        response: {
+          200: {
+            description: '성공적인 응답',
+            type: 'object',
+            properties: {
+              success: { type: 'boolean' },
+              data: { type: 'object' },
+              message: { type: 'string' }
+            }
+          }
+        }
+      }
+    },
+    dashboardController.getServerStats.bind(dashboardController)
+  )
+
+  // 디버깅 정보 조회
+  fastify.get('/dashboard/debug', dashboardController.getDebugInfo.bind(dashboardController))
+
+  // 간단한 테스트 엔드포인트
+  fastify.get('/dashboard/test', async (request, reply) => {
+    console.log('🧪 Test endpoint called')
+    return reply.send({
+      success: true,
+      data: {
+        test: 'working',
+        timestamp: new Date().toISOString()
+      },
+      message: 'Test endpoint working'
+    })
+  })
 }

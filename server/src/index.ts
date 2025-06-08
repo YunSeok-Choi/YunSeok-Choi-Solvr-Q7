@@ -6,6 +6,7 @@ import runMigration from './db/migrate'
 import { createUserService } from './services/userService'
 import { ReleaseStatsService } from './services/releaseStatsService'
 import { GithubService } from './services/githubService'
+import { DataService } from './services/dataService'
 import { createRoutes } from './routes'
 import { AppContext } from './types/context'
 
@@ -36,6 +37,10 @@ async function start() {
     // 데이터베이스 마이그레이션 및 초기화
     await runMigration()
     await initializeDatabase()
+
+    // 릴리즈 데이터 로드
+    const dataService = DataService.getInstance()
+    await dataService.loadData()
 
     // 서비스 및 컨텍스트 초기화
     const db = await getDb()

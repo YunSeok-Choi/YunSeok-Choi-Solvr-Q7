@@ -8,17 +8,16 @@ import type {
   RawReleaseData
 } from '../types/dashboard'
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api'
-
+// API 클라이언트 설정
 const apiClient = axios.create({
-  baseURL: API_BASE_URL,
-  timeout: 30000,
+  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api',
+  timeout: 10000,
   headers: {
     'Content-Type': 'application/json'
   }
 })
 
-// API Response wrapper
+// API 응답 타입
 interface ApiResponse<T> {
   success: boolean
   data: T
@@ -26,9 +25,13 @@ interface ApiResponse<T> {
   error?: string
 }
 
+/**
+ * 대시보드 API 서비스
+ * 서버와의 통신을 담당하며, 순수하게 데이터 페칭과 변환만을 담당합니다.
+ */
 export class DashboardService {
   /**
-   * 전체 대시보드 데이터를 가져옵니다
+   * 대시보드 데이터를 가져옵니다
    */
   static async getDashboardData(filters?: DashboardFilters): Promise<DashboardData> {
     try {
@@ -72,6 +75,11 @@ export class DashboardService {
 
       const data = response.data.data
 
+      // 데이터 유효성 검증
+      if (!data) {
+        throw new Error('No data received from server')
+      }
+
       // 안전성을 위한 기본값 제공
       return {
         summary_metrics: data?.summary_metrics || [],
@@ -95,12 +103,10 @@ export class DashboardService {
           }
         },
         pagination_info: data?.pagination_info || {
-          total: 0,
+          total_records: 0,
           page: 1,
           limit: 50,
-          totalPages: 0,
-          hasNext: false,
-          hasPrev: false
+          total_pages: 0
         }
       }
     } catch (error) {
@@ -123,7 +129,7 @@ export class DashboardService {
         throw new Error(response.data.error || 'Failed to fetch metrics')
       }
 
-      return response.data.data.summary_metrics
+      return response.data.data.summary_metrics || []
     } catch (error) {
       console.error('Error fetching metrics:', error)
       throw this.handleApiError(error)
@@ -144,7 +150,17 @@ export class DashboardService {
         throw new Error(response.data.error || 'Failed to fetch aggregations')
       }
 
-      return response.data.data
+      return (
+        response.data.data || {
+          by_repo: [],
+          by_date: [],
+          by_day_of_week: [],
+          by_month: [],
+          by_quarter: [],
+          by_time_period: [],
+          by_release_type: []
+        }
+      )
     } catch (error) {
       console.error('Error fetching aggregations:', error)
       throw this.handleApiError(error)
@@ -165,7 +181,7 @@ export class DashboardService {
         throw new Error(response.data.error || 'Failed to fetch time series data')
       }
 
-      return response.data.data
+      return response.data.data || []
     } catch (error) {
       console.error('Error fetching time series data:', error)
       throw this.handleApiError(error)
@@ -200,8 +216,13 @@ export class DashboardService {
       }
 
       return {
-        data: response.data.data.raw_data,
-        pagination: response.data.data.pagination_info
+        data: response.data.data.raw_data || [],
+        pagination: response.data.data.pagination_info || {
+          total_records: 0,
+          page: 1,
+          limit: 50,
+          total_pages: 0
+        }
       }
     } catch (error) {
       console.error('Error fetching raw data:', error)
@@ -219,6 +240,47 @@ export class DashboardService {
     } catch (error) {
       console.error('Health check failed:', error)
       return false
+    }
+  }
+
+  /**
+   * 저장소 목록을 가져옵니다
+   */
+  static async getRepositories(): Promise<
+    Array<{ owner: string; name: string; releaseCount: number }>
+  > {
+    try {
+      const response =
+        await apiClient.get<
+          ApiResponse<Array<{ owner: string; name: string; releaseCount: number }>>
+        >('/dashboard/repositories')
+
+      if (!response.data.success) {
+        throw new Error(response.data.error || 'Failed to fetch repositories')
+      }
+
+      return response.data.data || []
+    } catch (error) {
+      console.error('Error fetching repositories:', error)
+      throw this.handleApiError(error)
+    }
+  }
+
+  /**
+   * 서버 통계 정보를 가져옵니다
+   */
+  static async getServerStats(): Promise<any> {
+    try {
+      const response = await apiClient.get<ApiResponse<any>>('/dashboard/stats')
+
+      if (!response.data.success) {
+        throw new Error(response.data.error || 'Failed to fetch server stats')
+      }
+
+      return response.data.data || {}
+    } catch (error) {
+      console.error('Error fetching server stats:', error)
+      throw this.handleApiError(error)
     }
   }
 
@@ -269,11 +331,13 @@ export class DashboardService {
         const message =
           error.response.data?.error ||
           error.response.data?.message ||
-          `HTTP ${error.response.status}`
+          `HTTP ${error.response.status}: ${error.response.statusText}`
         return new Error(`API Error: ${message}`)
       } else if (error.request) {
         // 네트워크 에러
-        return new Error('Network Error: Unable to connect to server')
+        return new Error(
+          'Network Error: Unable to connect to server. Please check if the server is running.'
+        )
       }
     }
 
