@@ -88,6 +88,13 @@ export class DashboardController {
         `✅ Dashboard data generated successfully - ${dashboardData?.raw_data?.length || 0} records`
       )
 
+      // 실제 응답 데이터 구조 확인
+      console.log('🚀 Final response data keys:', Object.keys(dashboardData || {}))
+      console.log(
+        '🚀 Response summary_metrics length:',
+        dashboardData?.summary_metrics?.length || 0
+      )
+
       return reply.status(200).send({
         success: true,
         data: dashboardData,

@@ -643,6 +643,10 @@ export class RawDataService {
       }
 
       console.log('✅ Dashboard response created successfully')
+      console.log('🔍 Response keys:', Object.keys(response))
+      console.log('🔍 Response summary_metrics:', response.summary_metrics?.length || 0)
+      console.log('🔍 Response raw_data:', response.raw_data?.length || 0)
+
       return response
     } catch (error) {
       console.error('❌ Dashboard data generation failed:', error)
