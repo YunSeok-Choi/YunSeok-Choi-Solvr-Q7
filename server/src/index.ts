@@ -4,6 +4,8 @@ import env from './config/env'
 import { initializeDatabase, getDb } from './db'
 import runMigration from './db/migrate'
 import { createUserService } from './services/userService'
+import { ReleaseStatsService } from './services/releaseStatsService'
+import { GithubService } from './services/githubService'
 import { createRoutes } from './routes'
 import { AppContext } from './types/context'
 
@@ -37,8 +39,11 @@ async function start() {
 
     // 서비스 및 컨텍스트 초기화
     const db = await getDb()
+    const githubService = new GithubService()
     const context: AppContext = {
-      userService: createUserService({ db })
+      userService: createUserService({ db }),
+      releaseStatsService: new ReleaseStatsService(githubService),
+      githubService
     }
 
     // 라우트 등록

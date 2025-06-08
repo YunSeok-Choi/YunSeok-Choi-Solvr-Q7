@@ -39,3 +39,18 @@ export interface UpdateUserDto {
   email?: string
   role?: UserRole
 }
+
+// GitHub Release 관련 타입
+export interface ReleaseInfo {
+  readonly repo: string
+  readonly tag: string
+  readonly publishedAt: string
+}
+
+// GitHub API Release 응답 타입
+export interface GithubReleaseResponse {
+  readonly tag_name: string
+  readonly published_at: string
+  readonly name: string
+  readonly body: string
+}
